@@ -238,4 +238,27 @@
         <tag>logstash</tag>
       </tags>
   </entry>
+  <entry>
+    <title>elasticsearch_1</title>
+    <url>/2022/08/05/elasticsearch-1/</url>
+    <content><![CDATA[<h1 id="安装并运行elasticsearch"><a href="#安装并运行elasticsearch" class="headerlink" title="安装并运行elasticsearch"></a>安装并运行elasticsearch</h1><h2 id="拉取elasticsearch镜像"><a href="#拉取elasticsearch镜像" class="headerlink" title="拉取elasticsearch镜像"></a>拉取elasticsearch镜像</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker pull elasticsearch:7.17.5</span><br></pre></td></tr></table></figure>
+<p><img src="/uploads/%E6%8B%89%E5%8F%96elasticsearch%E9%95%9C%E5%83%8F.png" alt="拉取elasticsearch镜像"></p>
+<h2 id="运行elasticsearch镜像"><a href="#运行elasticsearch镜像" class="headerlink" title="运行elasticsearch镜像"></a>运行elasticsearch镜像</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e &quot;discovery.type=single-node&quot; elasticsearch:7.17.5</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">暴露9200和9200端口</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">9200是http协议 用于外部连接</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">9300是tcp协议 用于jar之间的通讯，es集群用的就是9300</span></span><br></pre></td></tr></table></figure>
+<p><img src="/uploads/%E8%BF%90%E8%A1%8Celasticsearch.png" alt="运行elasticsearch"></p>
+<h2 id="验证elasticsearch是否运行成功"><a href="#验证elasticsearch是否运行成功" class="headerlink" title="验证elasticsearch是否运行成功"></a>验证elasticsearch是否运行成功</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">curl &#x27;http://localhost:9200&#x27;</span><br></pre></td></tr></table></figure>
+<p><img src="/uploads/%E9%AA%8C%E8%AF%81elasticseach%E7%BB%93%E6%9E%9C.png" alt="验证elasticsearch结果"></p>
+<h1 id="安装并运行kibana"><a href="#安装并运行kibana" class="headerlink" title="安装并运行kibana"></a>安装并运行kibana</h1><h2 id="拉取kibana镜像"><a href="#拉取kibana镜像" class="headerlink" title="拉取kibana镜像"></a>拉取kibana镜像</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">注意要与elasticsearch版本一致</span></span><br><span class="line">docker pull kibana:7.17.5</span><br></pre></td></tr></table></figure>
+<p><img src="/uploads/%E6%8B%89%E5%8F%96kibana%E9%95%9C%E5%83%8F.png" alt="拉取kibana镜像"></p>
+<h2 id="运行kibana"><a href="#运行kibana" class="headerlink" title="运行kibana"></a>运行kibana</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">暴露端口5601</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">192.168.31.157为本机地址</span></span><br><span class="line">docker run -d --name kibana -p 5601:5601 -e ELASTICSEARCH_HOSTS=http://192.168.31.157:9200 kibana:7.17.5</span><br></pre></td></tr></table></figure>
+<p><img src="/uploads/%E8%BF%90%E8%A1%8Ckibana.png" alt="运行kibana"></p>
+<h2 id="验证kibana是否运行成功"><a href="#验证kibana是否运行成功" class="headerlink" title="验证kibana是否运行成功"></a>验证kibana是否运行成功</h2><p>浏览器打开<a href="http://localhost:5601/">http://localhost:5601</a><br><img src="/uploads/%E6%A3%80%E6%9F%A5kibana%E6%98%AF%E5%90%A6%E8%BF%90%E8%A1%8C%E6%88%90%E5%8A%9F.png" alt="检查kibana是否运行成功"><br>见到此画面则表示kibana运行成功</p>
+]]></content>
+      <categories>
+        <category>elasticsearch</category>
+      </categories>
+      <tags>
+        <tag>elasticsearch</tag>
+        <tag>nosql</tag>
+      </tags>
+  </entry>
 </search>
