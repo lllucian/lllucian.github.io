@@ -213,26 +213,50 @@
       </tags>
   </entry>
   <entry>
-    <title>elasticsearch(1)</title>
-    <url>/2022/08/05/elasticsearch-1/</url>
-    <content><![CDATA[<h1 id="安装并运行elasticsearch"><a href="#安装并运行elasticsearch" class="headerlink" title="安装并运行elasticsearch"></a>安装并运行elasticsearch</h1><h2 id="拉取elasticsearch镜像"><a href="#拉取elasticsearch镜像" class="headerlink" title="拉取elasticsearch镜像"></a>拉取elasticsearch镜像</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker pull elasticsearch:7.17.5</span><br></pre></td></tr></table></figure>
-<p><img src="/uploads/%E6%8B%89%E5%8F%96elasticsearch%E9%95%9C%E5%83%8F.png" alt="拉取elasticsearch镜像"></p>
-<h2 id="运行elasticsearch镜像"><a href="#运行elasticsearch镜像" class="headerlink" title="运行elasticsearch镜像"></a>运行elasticsearch镜像</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e &quot;discovery.type=single-node&quot; elasticsearch:7.17.5</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">暴露9200和9200端口</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">9200是http协议 用于外部连接</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">9300是tcp协议 用于jar之间的通讯，es集群用的就是9300</span></span><br></pre></td></tr></table></figure>
-<p><img src="/uploads/%E8%BF%90%E8%A1%8Celasticsearch.png" alt="运行elasticsearch"></p>
-<h2 id="验证elasticsearch是否运行成功"><a href="#验证elasticsearch是否运行成功" class="headerlink" title="验证elasticsearch是否运行成功"></a>验证elasticsearch是否运行成功</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">curl &#x27;http://localhost:9200&#x27;</span><br></pre></td></tr></table></figure>
-<p><img src="/uploads/%E9%AA%8C%E8%AF%81elasticseach%E7%BB%93%E6%9E%9C.png" alt="验证elasticsearch结果"></p>
-<h1 id="安装并运行kibana"><a href="#安装并运行kibana" class="headerlink" title="安装并运行kibana"></a>安装并运行kibana</h1><h2 id="拉取kibana镜像"><a href="#拉取kibana镜像" class="headerlink" title="拉取kibana镜像"></a>拉取kibana镜像</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">注意要与elasticsearch版本一致</span></span><br><span class="line">docker pull kibana:7.17.5</span><br></pre></td></tr></table></figure>
-<p><img src="/uploads/%E6%8B%89%E5%8F%96kibana%E9%95%9C%E5%83%8F.png" alt="拉取kibana镜像"></p>
-<h2 id="运行kibana"><a href="#运行kibana" class="headerlink" title="运行kibana"></a>运行kibana</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">暴露端口5601</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">192.168.31.157为本机地址</span></span><br><span class="line">docker run -d --name kibana -p 5601:5601 -e ELASTICSEARCH_HOSTS=http://192.168.31.157:9200 kibana:7.17.5</span><br></pre></td></tr></table></figure>
-<p><img src="/uploads/%E8%BF%90%E8%A1%8Ckibana.png" alt="运行kibana"></p>
-<h2 id="验证kibana是否运行成功"><a href="#验证kibana是否运行成功" class="headerlink" title="验证kibana是否运行成功"></a>验证kibana是否运行成功</h2><p>浏览器打开<a href="http://localhost:5601/">http://localhost:5601</a><br><img src="/uploads/%E6%A3%80%E6%9F%A5kibana%E6%98%AF%E5%90%A6%E8%BF%90%E8%A1%8C%E6%88%90%E5%8A%9F.png" alt="检查kibana是否运行成功"><br>见到此画面则表示kibana运行成功</p>
+    <title>mysql使用主从复制实现读写分离</title>
+    <url>/2023/09/01/mysql%E4%BD%BF%E7%94%A8%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%E5%AE%9E%E7%8E%B0%E8%AF%BB%E5%86%99%E5%88%86%E7%A6%BB/</url>
+    <content><![CDATA[<h1 id="mysql使用主从复制实现读写分离"><a href="#mysql使用主从复制实现读写分离" class="headerlink" title="mysql使用主从复制实现读写分离"></a>mysql使用主从复制实现读写分离</h1><h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><p>macos、docker</p>
+<span id="more"></span>
+<h2 id="拉取mysql镜像"><a href="#拉取mysql镜像" class="headerlink" title="拉取mysql镜像"></a>拉取mysql镜像</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker pull mysql:latest</span><br></pre></td></tr></table></figure>
+<p><img src="/../uploads/docker%E6%8B%89%E5%8F%96mysql%E9%95%9C%E5%83%8F.png" alt="docker拉取mysql镜像.png"></p>
+<h2 id="docker-创建network使mysql容器可以在该network下互通"><a href="#docker-创建network使mysql容器可以在该network下互通" class="headerlink" title="docker 创建network使mysql容器可以在该network下互通"></a>docker 创建network使mysql容器可以在该network下互通</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker network create mysql-network</span><br></pre></td></tr></table></figure>
+<p><img src="/../uploads/docker%E5%88%9B%E5%BB%BAnetwork.png" alt="docker创建network.png"></p>
+<h2 id="docker创建两个mysql容器一个为主一个为从"><a href="#docker创建两个mysql容器一个为主一个为从" class="headerlink" title="docker创建两个mysql容器一个为主一个为从"></a>docker创建两个mysql容器一个为主一个为从</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name mysql-master --network=mysql-network -e MYSQL_ROOT_PASSWORD=123456 mysql:latest</span><br><span class="line">docker run -d --name mysql-slave --network=mysql-network -e MYSQL_ROOT_PASSWORD=123456 mysql:latest</span><br></pre></td></tr></table></figure>
+<p><img src="/../uploads/%E5%88%9B%E5%BB%BA%E4%B8%A4%E4%B8%AAmysql%E5%AE%B9%E5%99%A8.png" alt="创建两个mysql容器.png"></p>
+<h2 id="创建my-cnf复制进入两个容器中"><a href="#创建my-cnf复制进入两个容器中" class="headerlink" title="创建my.cnf复制进入两个容器中"></a>创建my.cnf复制进入两个容器中</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">touch my.cnf</span><br><span class="line">vim my.cnf</span><br></pre></td></tr></table></figure>
+<p><img src="/../uploads/%E5%88%9B%E5%BB%BAmy.cnf%E6%96%87%E4%BB%B6.png" alt="创建my.cnf文件.png"><br>mysql-master my.cnf内容如下</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">server-id=1 #集群中id唯一</span><br><span class="line">gtid-mode=ON #开启gtid</span><br><span class="line">enforce-gtid-consistency=ON #开启gtid一致性验证</span><br></pre></td></tr></table></figure>
+<p>将my.cnf复制到容器的&#x2F;etc&#x2F;mysql&#x2F;</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker cp my.cnf mysql-master:/etc/mysql/my.cnf</span><br></pre></td></tr></table></figure>
+<p><img src="/../uploads/%E5%A4%8D%E5%88%B6my.cnf%E8%87%B3mysql-master%E5%AE%B9%E5%99%A8%E4%B8%AD.png" alt="复制my.cnf至mysql-master容器中.png"><br>重启mysql-master容器</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker restart mysql-master</span><br><span class="line">docker ps -a --filter &quot;name=mysql-master&quot;</span><br></pre></td></tr></table></figure>
+<p><img src="/../uploads/%E9%87%8D%E5%90%AF%E5%B9%B6%E6%9F%A5%E7%9C%8Bmysql-master%E7%9A%84%E7%8A%B6%E6%80%81.png" alt="重启并查看mysql-master的状态.png"><br>mysql-slave my.cnf内容如下</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">server-id=2 #集群中id唯一</span><br><span class="line">gtid-mode=ON #开启gtid</span><br><span class="line">enforce-gtid-consistency=ON #开启gtid一致性验证</span><br><span class="line">log_slave_updates = ON #从机器开启复制</span><br><span class="line"></span><br><span class="line">read_only = ON #只读</span><br><span class="line">super_read_only = ON #超级账户也是只读</span><br></pre></td></tr></table></figure>
+<p>将my.cnf复制到容器的&#x2F;etc&#x2F;mysql&#x2F;</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker cp my.cnf mysql-slave:/etc/mysql/my.cnf</span><br></pre></td></tr></table></figure>
+<p><img src="/../uploads/%E5%A4%8D%E5%88%B6my.cnf%E8%87%B3mysql-slave%E5%AE%B9%E5%99%A8%E4%B8%AD.png" alt="复制my.cnf至mysql-slave容器中.png"><br>重启并查看mysql-slave的状态</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker restart mysql-slave</span><br><span class="line">docker ps -a --filter &quot;name=mysql-slave&quot;</span><br></pre></td></tr></table></figure>
+<p><img src="/../uploads/%E9%87%8D%E5%90%AF%E5%B9%B6%E6%9F%A5%E7%9C%8Bmysql-slave%E7%9A%84%E7%8A%B6%E6%80%81.png" alt="重启并查看mysql-slave的状态.png"></p>
+<h2 id="开启主从复制"><a href="#开启主从复制" class="headerlink" title="开启主从复制"></a>开启主从复制</h2><p>进入slave容器中</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker exec -it mysql-slave bash</span><br></pre></td></tr></table></figure>
+<p>由于mysql采用的是caching-password的方式直接开启主从复制会报错，所以在从数据库中要去连一次主数据库</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mysql -uroot -hmysql-master -p --get-server-public-key</span><br></pre></td></tr></table></figure>
+<p><img src="/../uploads/%E8%8E%B7%E5%8F%96%E4%B8%BB%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E4%BF%A1%E4%BB%BB.png" alt="获取主数据库的信任.png"><br>退出主数据库<br>登录从数据库开启主从复制</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mysql -uroot -p</span><br><span class="line">CHANGE MASTER TO</span><br><span class="line">  MASTER_HOST = &#x27;mysql-master&#x27;,</span><br><span class="line">  MASTER_USER = &#x27;root&#x27;,</span><br><span class="line">  MASTER_PASSWORD = &#x27;123456&#x27;,</span><br><span class="line">  MASTER_AUTO_POSITION = 1;</span><br></pre></td></tr></table></figure>
+<p><img src="/../uploads/%E6%8C%87%E5%AE%9A%E4%B8%BB%E6%95%B0%E6%8D%AE%E5%BA%93ip%E7%94%A8%E6%88%B7%E5%90%8D%E5%AF%86%E7%A0%81.png" alt="指定主数据库ip用户名密码.png"><br>开启主从复制</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">START SLAVE;</span><br></pre></td></tr></table></figure>
+<p><img src="/../uploads/%E4%BB%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E5%BC%80%E5%90%AF%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6.png" alt="从数据库开启主从复制.png"><br>检查复制状态</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">SHOW SLAVE STATUS\G</span><br></pre></td></tr></table></figure>
+<p><img src="/../uploads/%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%E5%BC%80%E5%90%AF%E6%88%90%E5%8A%9F.png" alt="主从复制开启成功.png"></p>
+<h2 id="验证主从复制"><a href="#验证主从复制" class="headerlink" title="验证主从复制"></a>验证主从复制</h2><p>在从数据库中创建一个shop库<br><img src="/../uploads/%E4%BB%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E6%97%A0%E6%B3%95%E5%88%9B%E5%BB%BA%E5%BA%93.png" alt="从数据库无法创建库.png"><br>在主数据库中创建一个shop库</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mysql -uroot -hmysql-master -p</span><br><span class="line">CREATE DATABASE shop default character set utf8mb4;</span><br></pre></td></tr></table></figure>
+<p>验证从数据库中是否有该数据库</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mysql -uroot -p</span><br><span class="line">SHOW DATABASE;</span><br></pre></td></tr></table></figure>
+<p><img src="/../uploads/%E4%BB%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E4%B9%9F%E6%9C%89%E8%AF%A5%E6%95%B0%E6%8D%AE%E5%BA%93.png" alt="从数据库中也有该数据库.png"></p>
+<h2 id="验证从数据库是否只读"><a href="#验证从数据库是否只读" class="headerlink" title="验证从数据库是否只读"></a>验证从数据库是否只读</h2><p><img src="/../uploads/%E4%BB%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E6%97%A0%E6%B3%95%E5%86%99%E5%85%A5%E6%95%B0%E6%8D%AE.png" alt="从数据库无法写入数据.png"></p>
 ]]></content>
-      <categories>
-        <category>elasticsearch</category>
-      </categories>
       <tags>
-        <tag>elasticsearch</tag>
-        <tag>nosql</tag>
+        <tag>mysql</tag>
       </tags>
   </entry>
   <entry>
@@ -259,6 +283,29 @@
 ]]></content>
       <tags>
         <tag>logstash</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>elasticsearch(1)</title>
+    <url>/2022/08/05/elasticsearch-1/</url>
+    <content><![CDATA[<h1 id="安装并运行elasticsearch"><a href="#安装并运行elasticsearch" class="headerlink" title="安装并运行elasticsearch"></a>安装并运行elasticsearch</h1><h2 id="拉取elasticsearch镜像"><a href="#拉取elasticsearch镜像" class="headerlink" title="拉取elasticsearch镜像"></a>拉取elasticsearch镜像</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker pull elasticsearch:7.17.5</span><br></pre></td></tr></table></figure>
+<p><img src="/uploads/%E6%8B%89%E5%8F%96elasticsearch%E9%95%9C%E5%83%8F.png" alt="拉取elasticsearch镜像"></p>
+<h2 id="运行elasticsearch镜像"><a href="#运行elasticsearch镜像" class="headerlink" title="运行elasticsearch镜像"></a>运行elasticsearch镜像</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e &quot;discovery.type=single-node&quot; elasticsearch:7.17.5</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">暴露9200和9200端口</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">9200是http协议 用于外部连接</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">9300是tcp协议 用于jar之间的通讯，es集群用的就是9300</span></span><br></pre></td></tr></table></figure>
+<p><img src="/uploads/%E8%BF%90%E8%A1%8Celasticsearch.png" alt="运行elasticsearch"></p>
+<h2 id="验证elasticsearch是否运行成功"><a href="#验证elasticsearch是否运行成功" class="headerlink" title="验证elasticsearch是否运行成功"></a>验证elasticsearch是否运行成功</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">curl &#x27;http://localhost:9200&#x27;</span><br></pre></td></tr></table></figure>
+<p><img src="/uploads/%E9%AA%8C%E8%AF%81elasticseach%E7%BB%93%E6%9E%9C.png" alt="验证elasticsearch结果"></p>
+<h1 id="安装并运行kibana"><a href="#安装并运行kibana" class="headerlink" title="安装并运行kibana"></a>安装并运行kibana</h1><h2 id="拉取kibana镜像"><a href="#拉取kibana镜像" class="headerlink" title="拉取kibana镜像"></a>拉取kibana镜像</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">注意要与elasticsearch版本一致</span></span><br><span class="line">docker pull kibana:7.17.5</span><br></pre></td></tr></table></figure>
+<p><img src="/uploads/%E6%8B%89%E5%8F%96kibana%E9%95%9C%E5%83%8F.png" alt="拉取kibana镜像"></p>
+<h2 id="运行kibana"><a href="#运行kibana" class="headerlink" title="运行kibana"></a>运行kibana</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">暴露端口5601</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">192.168.31.157为本机地址</span></span><br><span class="line">docker run -d --name kibana -p 5601:5601 -e ELASTICSEARCH_HOSTS=http://192.168.31.157:9200 kibana:7.17.5</span><br></pre></td></tr></table></figure>
+<p><img src="/uploads/%E8%BF%90%E8%A1%8Ckibana.png" alt="运行kibana"></p>
+<h2 id="验证kibana是否运行成功"><a href="#验证kibana是否运行成功" class="headerlink" title="验证kibana是否运行成功"></a>验证kibana是否运行成功</h2><p>浏览器打开<a href="http://localhost:5601/">http://localhost:5601</a><br><img src="/uploads/%E6%A3%80%E6%9F%A5kibana%E6%98%AF%E5%90%A6%E8%BF%90%E8%A1%8C%E6%88%90%E5%8A%9F.png" alt="检查kibana是否运行成功"><br>见到此画面则表示kibana运行成功</p>
+]]></content>
+      <categories>
+        <category>elasticsearch</category>
+      </categories>
+      <tags>
+        <tag>elasticsearch</tag>
+        <tag>nosql</tag>
       </tags>
   </entry>
 </search>
